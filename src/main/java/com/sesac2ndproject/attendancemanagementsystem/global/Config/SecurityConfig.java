@@ -69,11 +69,11 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(
-                                        "/api/v1/admin/",                 // 1. 일반 관리자 (설정 등)
-                                        "/api/v1/leave-requests/admin/",  // 2. 휴가 관리
-                                        "/api/v1/attendances/admin/",     // 3. 출석 관리
-                                        "/api/v1/notices/admin/",         // 4. 공지 관리
-                                        "/api/v1/members/admin/"          // 5. 회원 관리
+                                        "/api/v1/admin/**",                 // 1. 일반 관리자 (설정 등)
+                                        "/api/v1/leave-requests/admin/**",  // 2. 휴가 관리
+                                        "/api/v1/attendances/admin/**",     // 3. 출석 관리
+                                        "/api/v1/notices/admin/**",         // 4. 공지 관리
+                                        "/api/v1/members/admin/**"          // 5. 회원 관리
                         ).hasRole("ADMIN")
 
                         .requestMatchers("/api/v1/").authenticated()
