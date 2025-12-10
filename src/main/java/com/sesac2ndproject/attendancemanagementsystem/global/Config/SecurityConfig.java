@@ -12,6 +12,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -26,10 +31,27 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://127.0.0.1:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+
     // 보안 필터 체인
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 // CSRF 해제 (REST API 개발 시 필수)
                 .csrf(AbstractHttpConfigurer::disable)
 
@@ -46,10 +68,15 @@ public class SecurityConfig {
                                 "/h2-console/**"
                         ).permitAll()
 
-                        // 테스트 전용(추후 삭제)
-                        .requestMatchers("/**").permitAll()
+                        .requestMatchers(
+                                        "/api/v1/admin/**",                 // 1. 일반 관리자 (설정 등)
+                                        "/api/v1/leave-requests/admin/**",  // 2. 휴가 관리
+                                        "/api/v1/attendances/admin/**",     // 3. 출석 관리
+                                        "/api/v1/notices/admin/**",         // 4. 공지 관리
+                                        "/api/v1/members/admin/**"          // 5. 회원 관리
+                        ).hasRole("ADMIN")
 
-                        // 나머지는 무조건 인증 필요
+                        .requestMatchers("/api/v1/").authenticated()
                         .anyRequest().authenticated()
                 )
 
