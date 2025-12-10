@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AttendanceManagementSystemApplication {
+public class NewAttendanceManagementSystemApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AttendanceManagementSystemApplication.class, args);
+        SpringApplication.run(NewAttendanceManagementSystemApplication.class, args);
     }
 
 }
