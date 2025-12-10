@@ -98,6 +98,9 @@ public class LeaveRequestService {
 
         // 4. 상태 변경 (CANCELLED)
         leaveRequest.cancel();
+
+        // 5. DB에 저장 (추가!)
+        leaveRequestRepository.save(leaveRequest);
     }
 
     /**
@@ -146,4 +149,3 @@ public class LeaveRequestService {
                 .collect(Collectors.toList());
     }
 }
-

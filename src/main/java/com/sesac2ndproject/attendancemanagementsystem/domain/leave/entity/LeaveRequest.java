@@ -93,6 +93,9 @@ public class LeaveRequest extends BaseTimeEntity {
         this.adminComment = reason;
     }
 
+    // LeaveRequest.java 엔티티에서 cancel() 메서드 개선
+    // (기존 코드와 유사하지만 취소 시간 기록 추가)
+
     /**
      * 본인 취소
      */
@@ -101,5 +104,7 @@ public class LeaveRequest extends BaseTimeEntity {
             throw new IllegalStateException("이미 처리된 내역은 취소할 수 없습니다.");
         }
         this.status = LeaveStatus.CANCELLED;
+        this.processedAt = LocalDateTime.now();  // 취소 시간 기록
+        this.processedBy = "SELF_CANCELLED";      // 본인 취소임을 표시 (선택사항)
     }
 }

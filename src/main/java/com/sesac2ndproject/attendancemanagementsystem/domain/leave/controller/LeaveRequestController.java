@@ -30,6 +30,7 @@ public class LeaveRequestController {
      * [사용자] 휴가 신청
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "휴가 신청 생성", description = "새로운 휴가 신청을 생성합니다 (파일 첨부 가능)")
     public ResponseEntity<LeaveRequestResponseDto> createLeaveRequest(
             @RequestParam("leaveDate") String leaveDateStr,
             @RequestParam("reason") String reason,
@@ -70,6 +71,7 @@ public class LeaveRequestController {
      * [사용자] 내 신청 내역 조회
      */
     @GetMapping("/me")
+    @Operation(summary = "내 휴가 신청 목록 조회", description = "본인이 신청한 휴가 신청 목록을 조회합니다")
     public ResponseEntity<List<LeaveRequestResponseDto>> getMyLeaveRequests(
             @RequestHeader("Student-Login-Id") String studentLoginId
     ) {
@@ -82,6 +84,7 @@ public class LeaveRequestController {
      * [사용자] 신청 취소 (파일 삭제 포함)
      */
     @DeleteMapping("/{id}")
+    @Operation(summary = "휴가 신청 취소", description = "PENDING 상태의 자신의 휴가 신청만 취소할 수 있습니다")
     public ResponseEntity<Void> cancelLeaveRequest(
             @PathVariable Long id,
             @RequestHeader("Student-Login-Id") String studentLoginId
