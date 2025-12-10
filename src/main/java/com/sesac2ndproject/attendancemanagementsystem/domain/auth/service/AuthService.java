@@ -28,7 +28,7 @@ public class AuthService {
     // 로그인 기능
     @Transactional
     public AuthResponse login(AuthRequest request) {
-        // 1. 회원 확인 및 비밀번호 검증 (기존 로직)
+
         Member member = memberRepository.findByLoginId(request.getLoginId())
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -36,26 +36,22 @@ public class AuthService {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        // 2. 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(member.getLoginId(), member.getRole().name());
-        String refreshToken = jwtTokenProvider.createRefreshToken(); // Provider에 이 메서드 추가 필요
+        String refreshToken = jwtTokenProvider.createRefreshToken();
 
-        // 3. Refresh Token 저장 (기존에 있으면 업데이트, 없으면 생성)
         refreshTokenRepository.findById(member.getLoginId())
                 .ifPresentOrElse(
                         token -> token.updateToken(refreshToken),
                         () -> refreshTokenRepository.save(new RefreshToken(member.getLoginId(), refreshToken))
                 );
 
-        // 4. 두 토큰 반환
-        // 4. 응답 생성 (모든 정보를 담아서 반환)
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .id(member.getId())        // Long 타입 ID
-                .loginId(member.getLoginId())    // String 타입 ID
-                .name(member.getName())          // 사용자 이름
-                .role(member.getRole())          // 권한 (ADMIN/USER)
+                .id(member.getId())
+                .loginId(member.getLoginId())
+                .name(member.getName())
+                .role(member.getRole())
                 .build();
     }
 

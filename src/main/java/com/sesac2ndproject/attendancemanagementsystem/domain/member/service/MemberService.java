@@ -81,7 +81,7 @@ public class MemberService {
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
-        member.updateInfo(request.getPhonenumber(), request.getPhonenumber());
+        member.updateInfo(request.getPhonenumber(), request.getAddress());
     }
 
     /// 멤버 정보 삭제 - admin
