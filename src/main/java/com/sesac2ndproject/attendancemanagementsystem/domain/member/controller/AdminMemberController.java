@@ -38,7 +38,7 @@ public class AdminMemberController {
     }
 
     @Operation(summary = "회원 정보 수정", description = "관리자가 회원의 정보를 수정합니다")
-    @PatchMapping("/{memberId}")
+    @PatchMapping("/{loginId}")
     public ResponseEntity<Void> updateMemberInfo(
             @PathVariable String loginId,
             @RequestBody MemberUpdateRequest request
