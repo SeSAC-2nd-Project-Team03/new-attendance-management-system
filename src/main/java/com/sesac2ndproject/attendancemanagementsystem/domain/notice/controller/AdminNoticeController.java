@@ -1,8 +1,10 @@
 package com.sesac2ndproject.attendancemanagementsystem.domain.notice.controller;
 
+import com.sesac2ndproject.attendancemanagementsystem.domain.member.entity.Member;
 import com.sesac2ndproject.attendancemanagementsystem.domain.notice.dto.NoticeRequestDTO;
 import com.sesac2ndproject.attendancemanagementsystem.domain.notice.service.NoticeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,10 +27,11 @@ public class AdminNoticeController {
     // 4. 공지사항 생성(POST)
     @Operation(summary = "공지사항 작성", description = "관리자가 새로운 공지사항을 등록.")
     @PostMapping
-    public ResponseEntity<Long> createNotice(@RequestBody NoticeRequestDTO noticeRequestDTO) {
-        // 나중에 @AuthenticationPrincipal로 실제 로그인한 관리자 ID를 받아와야 함.
-        // 현재는 임시로 1번 관리자(admin)가 작성한다고 가정.
-        Long adminId = 1L;
+    public ResponseEntity<Long> createNotice(@RequestBody NoticeRequestDTO noticeRequestDTO,
+                                             @Parameter(hidden = true)  @AuthenticationPrincipal Member admin /*현재 로그인 한 관리자 정보 가져옴*/) {
+        // 테스트를 대비하여 기본값은 1L로 설정
+        Long adminId = (admin != null) ? admin.getId() : 1L;
+//        Long adminId = 1L;
         Long createdId = noticeService.createNotice(noticeRequestDTO, adminId);
         return ResponseEntity.ok(createdId);
     }

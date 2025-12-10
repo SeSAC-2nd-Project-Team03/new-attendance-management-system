@@ -130,12 +130,12 @@ public class AttendanceQueryService {
     public byte[] downloadAttendanceStats(String type, LocalDate date, Long courseId) {
         List<ResponseAttendanceFlatDTO> dataList;
 
-        // 1. 데이터 조회 분기 처리
+        // 1. 데이터 조회 분기 처리 ( 전체 조회 or 부분 조회 )
         if(date == null && courseId == null) {
             // date와 courseId의 입력이 없으면 -> 전체 조회
             dataList = enrollmentRepository.findAllIntegratedAttendance();
         } else if (date != null && courseId != null) {
-            // date와 courseId의 입력이 있으면 -> 전체 조회
+            // date와 courseId의 입력이 있으면 -> 부분 조회
             dataList = enrollmentRepository.integratedAttendance(date, courseId);
         } else {
             // 둘 중 하나만 들어온 경우 예외 처리
