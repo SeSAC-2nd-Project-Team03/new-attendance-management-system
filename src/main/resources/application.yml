@@ -64,6 +64,6 @@ jwt:
 file:
   upload:
     # 로컬 저장 경로 (Windows: C:/..., Mac/Linux: /Users/...)
-    path: C:/uploads/leave-files
+    path: ./uploads/leave-files
     # 파일 접근 URL (FileController와 매핑)
     url: http://localhost:9090/api/v1/files
