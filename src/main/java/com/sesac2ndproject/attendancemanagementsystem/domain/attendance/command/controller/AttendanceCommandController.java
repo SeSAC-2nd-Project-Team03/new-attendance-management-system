@@ -4,6 +4,7 @@ import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.common.d
 import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.command.dto.AttendanceAutoCheckRequest;
 import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.command.service.AttendanceCommandService;
 import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.common.dto.request.AttendanceCheckRequest;
+import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.common.dto.request.AttendanceStatusUpdateRequest;
 import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.common.dto.response.AttendanceCheckResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -240,6 +241,59 @@ public class AttendanceCommandController {
     @Operation(summary = "출석 상태 변경(출석)", description = "시스템 판정과 상관없이 관리자가 상태(예: 지각→출석)를 직접 수정.")
     public ResponseEntity<com.sesac2ndproject.attendancemanagementsystem.global.response.ApiResponse<DailyAttendanceResponse>> changeDailyAttendancePresentStatus(@PathVariable Long id) {
         DailyAttendanceResponse result = attendanceCommandService.statusPresenceChange(id);
+        return ResponseEntity.ok(com.sesac2ndproject.attendancemanagementsystem.global.response.ApiResponse.success(result));
+    }
+
+    /**
+     * [관리자] memberId 기반 출석 상태 강제 변경 API
+     * PATCH /api/v1/attendances/admin/member/{memberId}
+     * DailyAttendance가 없어도 새로 생성하여 출석으로 처리
+     */
+    @PatchMapping("/admin/member/{memberId}")
+    @Operation(summary = "memberId 기반 출석 상태 변경(출석)", description = "memberId, courseId, date를 기반으로 출석 상태를 출석으로 변경. DailyAttendance가 없으면 새로 생성.")
+    public ResponseEntity<com.sesac2ndproject.attendancemanagementsystem.global.response.ApiResponse<DailyAttendanceResponse>> changeDailyAttendancePresentStatusByMember(
+            @PathVariable Long memberId,
+            @RequestParam Long courseId,
+            @RequestParam @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date) {
+        log.info("📝 [관리자] 출석 상태 변경 요청 - memberId: {}, courseId: {}, date: {}", memberId, courseId, date);
+        DailyAttendanceResponse result = attendanceCommandService.statusPresenceChangeByMember(memberId, courseId, date);
+        return ResponseEntity.ok(com.sesac2ndproject.attendancemanagementsystem.global.response.ApiResponse.success(result));
+    }
+
+    /**
+     * [관리자] 출석 상태 개별 변경 API (아침/점심/저녁/전체 각각 변경)
+     * PUT /api/v1/attendances/admin/status
+     */
+    @PutMapping("/admin/status")
+    @Operation(
+            summary = "출석 상태 개별 변경",
+            description = """
+            관리자가 학생의 출석 상태를 시간대별로 개별 변경합니다.
+            
+            **변경 가능 상태:**
+            - PRESENT: 출석
+            - LATE: 지각
+            - ABSENT: 결석
+            - EARLY_LEAVE: 조퇴
+            - OFFICIAL_LEAVE: 공결
+            
+            **사용 예시:**
+            - 아침만 지각으로 변경: morningStatus만 설정
+            - 전체를 출석으로 변경: overallStatus 설정
+            - 점심/저녁을 결석으로 변경: lunchStatus, dinnerStatus 설정
+            
+            null인 필드는 변경되지 않습니다.
+            """
+    )
+    public ResponseEntity<com.sesac2ndproject.attendancemanagementsystem.global.response.ApiResponse<DailyAttendanceResponse>> updateAttendanceStatus(
+            @RequestBody AttendanceStatusUpdateRequest request) {
+        log.info("📝 [관리자] 출석 상태 개별 변경 요청 - memberId: {}, courseId: {}, date: {}", 
+                request.getMemberId(), request.getCourseId(), request.getDate());
+        log.info("변경 요청 - morning: {}, lunch: {}, dinner: {}, overall: {}", 
+                request.getMorningStatus(), request.getLunchStatus(), 
+                request.getDinnerStatus(), request.getOverallStatus());
+        
+        DailyAttendanceResponse result = attendanceCommandService.updateAttendanceStatus(request);
         return ResponseEntity.ok(com.sesac2ndproject.attendancemanagementsystem.global.response.ApiResponse.success(result));
     }
 

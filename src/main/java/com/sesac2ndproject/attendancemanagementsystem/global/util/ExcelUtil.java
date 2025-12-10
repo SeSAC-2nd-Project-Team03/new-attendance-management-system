@@ -57,7 +57,7 @@ public class ExcelUtil {
                     row.createCell(9).setCellValue("-");
                 }
             }
-
+            
             // 컬럼 너비 자동 조절 로직
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);

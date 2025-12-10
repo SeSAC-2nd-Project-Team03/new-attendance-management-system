@@ -13,7 +13,24 @@ import java.util.List;
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     // Team D 쿼리 1 : 해당하는 courseId를 가진 Enrollment(Member 포함) 찾아오기
-    List<Enrollment> findMemberIdByCourseId(Long courseId);
+    // ACTIVE 상태의 수강생만 조회하도록 명시적 쿼리 추가
+    @Query("SELECT e FROM Enrollment e " +
+           "JOIN FETCH e.member m " +
+           "JOIN FETCH e.course c " +
+           "WHERE e.course.id = :courseId AND e.status = :status " +
+           "ORDER BY m.name ASC")
+    List<Enrollment> findMemberIdByCourseIdAndStatus(
+            @Param("courseId") Long courseId,
+            @Param("status") EnrollmentStatus status
+    );
+    
+    // 기존 메서드 유지 (하위 호환성)
+    @Query("SELECT e FROM Enrollment e " +
+           "JOIN FETCH e.member m " +
+           "JOIN FETCH e.course c " +
+           "WHERE e.course.id = :courseId " +
+           "ORDER BY m.name ASC")
+    List<Enrollment> findMemberIdByCourseId(@Param("courseId") Long courseId);
 
     /**
      * Team D 쿼리 2 : 통합 출석부 조회 (날짜 + 과정ID)

@@ -26,7 +26,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -63,6 +62,18 @@ public class DataInitializer implements CommandLineRunner {
         createStudentIfAbsent("student2", "이영희", "010-3333-4444");
         createStudentIfAbsent("student3", "박조퇴", "010-5555-6666");
 
+        // 추가 학생 더미 데이터 (10명)
+        createStudentIfAbsent("student4", "최민수", "010-7777-8888");
+        createStudentIfAbsent("student5", "정수진", "010-9999-0000");
+        createStudentIfAbsent("student6", "한지훈", "010-1111-3333");
+        createStudentIfAbsent("student7", "윤서연", "010-2222-4444");
+        createStudentIfAbsent("student8", "오동현", "010-3333-5555");
+        createStudentIfAbsent("student9", "강미영", "010-4444-6666");
+        createStudentIfAbsent("student10", "임태준", "010-5555-7777");
+        createStudentIfAbsent("student11", "배혜진", "010-6666-8888");
+        createStudentIfAbsent("student12", "신우진", "010-7777-9999");
+        createStudentIfAbsent("student13", "조은서", "010-8888-1111");
+        
         // 3. 과정(Course) 생성 및 가져오기
         Course javaCourse;
         if (courseRepository.count() == 0) {
@@ -78,229 +89,122 @@ public class DataInitializer implements CommandLineRunner {
             javaCourse = courseRepository.findAll().get(0);
         }
 
-        // 4. 수강신청 (학생과 과정이 있을 때만 진행)
+        // 4. 수강신청 (모든 학생에 대해 진행)
         if (enrollmentRepository.count() == 0) {
-            Member s1 = memberRepository.findByLoginId("student1").orElseThrow();
-            Member s2 = memberRepository.findByLoginId("student2").orElseThrow();
-            Member s3 = memberRepository.findByLoginId("student3").orElseThrow();
-
-            enrollmentRepository.save(createEnrollment(s1, javaCourse));
-            enrollmentRepository.save(createEnrollment(s2, javaCourse));
-            enrollmentRepository.save(createEnrollment(s3, javaCourse));
-            System.out.println("수강신청 데이터 초기화 완료");
-        }
-
-        // 5. 과거 데이터 대량 생성 (어제부터 5일 전까지)
-        // 목표: 10개 이상의 DailyAttendance 데이터 만들기
-        // =====================================================================
-        if (dailyAttendanceRepository.count() < 5) { // 데이터가 너무 적으면 실행
-            System.out.println("🔄 [테스트용] 과거 5일치 출석 데이터 생성 시작...");
-            Member s1 = memberRepository.findByLoginId("student1").orElseThrow();
-            Member s2 = memberRepository.findByLoginId("student2").orElseThrow();
-            Member s3 = memberRepository.findByLoginId("student3").orElseThrow();
-
-            List<Member> students = Arrays.asList(s1, s2, s3);
-            LocalDate yesterday = LocalDate.now().minusDays(1);
-
-            // 어제부터 과거 5일간 반복 (총 3명 * 5일 = 15개 Daily 데이터 생성)
-            for (int i = 0; i < 5; i++) {
-                LocalDate targetDate = yesterday.minusDays(i);
-
-                for (Member student : students) {
-                    createPastData(student, javaCourse, targetDate);
-                }
+            for (int i = 1; i <= 13; i++) {
+                String loginId = "student" + i;
+                Member student = memberRepository.findByLoginId(loginId).orElseThrow();
+                enrollmentRepository.save(createEnrollment(student, javaCourse));
             }
-            System.out.println("✅ [테스트용] 과거 데이터 생성 완료 (Daily 15개 추가됨)");
+            System.out.println("수강신청 데이터 초기화 완료 (13명)");
         }
 
         // ============================================
-        // ✅ Person 1: 출석 설정(AttendanceConfig) 생성
+        // 공통 변수 선언 (admin, today)
         // ============================================
-        if (attendanceConfigRepository.count() == 0) {
-            LocalDate today = LocalDate.now();
-            Member admin = memberRepository.findByLoginId("admin").orElseThrow();
+        Member admin = memberRepository.findByLoginId("admin").orElseThrow();
+        LocalDate today = LocalDate.now();
 
-            // 아침 출석 설정 (08:50~09:10, 인증번호: 1234)
-            attendanceConfigRepository.save(AttendanceConfig.builder()
-                    .courseId(javaCourse.getId())
-                    .adminId(admin.getId())  // ✅ 추가
-                    .targetDate(today)
-                    .type(AttendanceType.MORNING)
-                    .authNumber("1234")
-                    .standardTime(LocalTime.of(8, 50))  // ✅ 추가
-                    .deadline(LocalTime.of(9, 10))
-                    .validMinutes(20)
-                    .build());
-
-            // 점심 출석 설정 (13:10~13:30, 인증번호: 5678)
-            attendanceConfigRepository.save(AttendanceConfig.builder()
-                    .courseId(javaCourse.getId())
-                    .adminId(admin.getId())  // ✅ 추가
-                    .targetDate(today)
-                    .type(AttendanceType.LUNCH)
-                    .authNumber("5678")
-                    .standardTime(LocalTime.of(13, 10))  // ✅ 추가
-                    .deadline(LocalTime.of(13, 30))
-                    .validMinutes(20)
-                    .build());
-
-            // 저녁 출석 설정 (17:50~18:10, 인증번호: 9999)
-            attendanceConfigRepository.save(AttendanceConfig.builder()
-                    .courseId(javaCourse.getId())
-                    .adminId(admin.getId())  // ✅ 추가
-                    .targetDate(today)
-                    .type(AttendanceType.DINNER)
-                    .authNumber("9999")
-                    .standardTime(LocalTime.of(17, 50))  // ✅ 추가
-                    .deadline(LocalTime.of(18, 10))
-                    .validMinutes(20)
-                    .build());
-
-            System.out.println("✅ [Person 1] 출석 설정(AttendanceConfig) 생성 완료");
+        // 5. 과거 데이터 대량 생성 (어제부터 7일 전까지, 모든 학생 대상)
+        // 목표: 13명 * 7일 = 91개의 DailyAttendance 데이터 만들기
+        // =====================================================================
+        // 항상 과거 데이터 생성 시도 (중복은 createPastDataRandom 내부에서 체크)
+        System.out.println("🔄 [테스트용] 과거 7일치 출석 데이터 생성 시작 (모든 학생 대상)...");
+        
+        // 모든 학생 조회 (student1 ~ student13)
+        List<Member> allStudents = new java.util.ArrayList<>();
+        for (int i = 1; i <= 13; i++) {
+            String loginId = "student" + i;
+            memberRepository.findByLoginId(loginId).ifPresent(allStudents::add);
         }
 
-        Member s1 = memberRepository.findByLoginId("student1").orElseThrow();
-        Member s2 = memberRepository.findByLoginId("student2").orElseThrow();
-        Member s3 = memberRepository.findByLoginId("student3").orElseThrow();
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        int createdDays = 0;
+        int skippedWeekends = 0;
+        int totalCreated = 0;
+
+        // 어제부터 과거 7일간 반복 (주말 제외)
+        for (int i = 0; i < 14; i++) { // 주말 제외를 위해 더 넓은 범위 탐색
+            LocalDate targetDate = yesterday.minusDays(i);
+            
+            // 주말 제외 (토요일, 일요일)
+            java.time.DayOfWeek dayOfWeek = targetDate.getDayOfWeek();
+            if (dayOfWeek == java.time.DayOfWeek.SATURDAY || dayOfWeek == java.time.DayOfWeek.SUNDAY) {
+                skippedWeekends++;
+                continue;
+            }
+            
+            // 최대 7일치만 생성
+            if (createdDays >= 7) {
+                break;
+            }
+
+            // 과거 날짜에 대한 AttendanceConfig 생성
+            createAttendanceConfigForDate(javaCourse, admin, targetDate);
+            
+            // 각 학생의 출석 데이터 생성 (중복 체크 포함)
+            for (Member student : allStudents) {
+                boolean created = createPastDataRandomIfNotExists(student, javaCourse, targetDate);
+                if (created) totalCreated++;
+            }
+            createdDays++;
+        }
+        System.out.println("✅ [테스트용] 과거 데이터 생성 완료 (신규 생성: " + totalCreated + "개, 주말 " + skippedWeekends + "일 제외)");
 
         // ============================================
-        // 5. 출석 상세 기록 (Person 2용)
+        // ✅ Person 1: 출석 설정(AttendanceConfig) 생성 (오늘 날짜)
+        // ============================================
+        // 오늘 날짜의 출석 설정이 없으면 생성
+        boolean todayConfigExists = attendanceConfigRepository.findByCourseIdAndTargetDateAndType(
+                javaCourse.getId(), today, AttendanceType.MORNING).isPresent();
+        
+        if (!todayConfigExists) {
+            createAttendanceConfigForDate(javaCourse, admin, today);
+            System.out.println("✅ [Person 1] 오늘 날짜 출석 설정(AttendanceConfig) 생성 완료");
+        }
+
+        // ============================================
+        // 5. 오늘 출석 상세 기록 (모든 학생 대상)
         // ============================================
         if (detailedAttendanceRepository.count() == 0) {
-            LocalDate today = LocalDate.now();
-
-            // ============================================
-            // 🔵 케이스 1: 모두 출석 (student1)
-            // 아침(O) + 점심(O) + 저녁(O) → PRESENT
-            // ============================================
+            java.util.Random random = new java.util.Random();
             
-            // 1) 아침 출석 (정시)
-            detailedAttendanceRepository.save(DetailedAttendance.builder()
-                    .memberId(s1.getId())
-                    .courseId(javaCourse.getId())
-                    .dailyAttendanceId(null)
-                    .type(AttendanceType.MORNING)
-                    .inputNumber("1234")
-                    .checkTime(LocalDateTime.of(today, LocalTime.of(8, 55)))  // 08:55 (정시)
-                    .connectionIp("192.168.1.100")
-                    .isVerified(true)
-                    .failReason(null)
-                    .build());
-
-            // 2) 점심 출석 (정시)
-            detailedAttendanceRepository.save(DetailedAttendance.builder()
-                    .memberId(s1.getId())
-                    .courseId(javaCourse.getId())
-                    .dailyAttendanceId(null)
-                    .type(AttendanceType.LUNCH)
-                    .inputNumber("5678")
-                    .checkTime(LocalDateTime.of(today, LocalTime.of(13, 15)))  // 13:15 (정시)
-                    .connectionIp("192.168.1.100")
-                    .isVerified(true)
-                    .failReason(null)
-                    .build());
-
-            // 3) 저녁 출석 (정시)
-            detailedAttendanceRepository.save(DetailedAttendance.builder()
-                    .memberId(s1.getId())
-                    .courseId(javaCourse.getId())
-                    .dailyAttendanceId(null)
-                    .type(AttendanceType.DINNER)
-                    .inputNumber("9999")
-                    .checkTime(LocalDateTime.of(today, LocalTime.of(17, 55)))  // 17:55 (정시)
-                    .connectionIp("192.168.1.100")
-                    .isVerified(true)
-                    .failReason(null)
-                    .build());
-
-            System.out.println("🔵 [student1] 모두 출석: 아침(O) + 점심(O) + 저녁(O) → PRESENT");
-
-            // ============================================
-            // 🟡 케이스 2: 지각 (student2)
-            // 아침(X) + 점심(O) + 저녁(O) → LATE
-            // ============================================
+            System.out.println("🔄 [테스트용] 오늘 출석 데이터 생성 시작 (모든 학생 대상)...");
             
-            // 1) 아침 결석 (시간 초과)
-            detailedAttendanceRepository.save(DetailedAttendance.builder()
-                    .memberId(s2.getId())
-                    .courseId(javaCourse.getId())
-                    .dailyAttendanceId(null)
-                    .type(AttendanceType.MORNING)
-                    .inputNumber("1234")
-                    .checkTime(LocalDateTime.of(today, LocalTime.of(9, 30)))  // 09:30 (마감 후)
-                    .connectionIp("192.168.1.101")
-                    .isVerified(false)
-                    .failReason("출석 가능 시간이 아닙니다. (출석 가능: 08:50 ~ 09:10)")
-                    .build());
-
-            // 2) 점심 출석 (정시)
-            detailedAttendanceRepository.save(DetailedAttendance.builder()
-                    .memberId(s2.getId())
-                    .courseId(javaCourse.getId())
-                    .dailyAttendanceId(null)
-                    .type(AttendanceType.LUNCH)
-                    .inputNumber("5678")
-                    .checkTime(LocalDateTime.of(today, LocalTime.of(13, 20)))  // 13:20 (정시)
-                    .connectionIp("192.168.1.101")
-                    .isVerified(true)
-                    .failReason(null)
-                    .build());
-
-            // 3) 저녁 출석 (정시)
-            detailedAttendanceRepository.save(DetailedAttendance.builder()
-                    .memberId(s2.getId())
-                    .courseId(javaCourse.getId())
-                    .dailyAttendanceId(null)
-                    .type(AttendanceType.DINNER)
-                    .inputNumber("9999")
-                    .checkTime(LocalDateTime.of(today, LocalTime.of(18, 0)))  // 18:00 (정시)
-                    .connectionIp("192.168.1.101")
-                    .isVerified(true)
-                    .failReason(null)
-                    .build());
-
-            System.out.println("🟡 [student2] 지각: 아침(X) + 점심(O) + 저녁(O) → LATE");
-
-            // ============================================
-            // 🟠 케이스 3: 조퇴 (student3)
-            // 아침(O) + 점심(O) + 저녁(X) → LEAVE
-            // ============================================
-            
-            // 1) 아침 출석 (정시)
-            detailedAttendanceRepository.save(DetailedAttendance.builder()
-                    .memberId(s3.getId())
-                    .courseId(javaCourse.getId())
-                    .dailyAttendanceId(null)
-                    .type(AttendanceType.MORNING)
-                    .inputNumber("1234")
-                    .checkTime(LocalDateTime.of(today, LocalTime.of(8, 58)))  // 08:58 (정시)
-                    .connectionIp("192.168.1.102")
-                    .isVerified(true)
-                    .failReason(null)
-                    .build());
-
-            // 2) 점심 출석 (정시)
-            detailedAttendanceRepository.save(DetailedAttendance.builder()
-                    .memberId(s3.getId())
-                    .courseId(javaCourse.getId())
-                    .dailyAttendanceId(null)
-                    .type(AttendanceType.LUNCH)
-                    .inputNumber("5678")
-                    .checkTime(LocalDateTime.of(today, LocalTime.of(13, 12)))  // 13:12 (정시)
-                    .connectionIp("192.168.1.102")
-                    .isVerified(true)
-                    .failReason(null)
-                    .build());
-
-            // 3) 저녁 출석 없음 (조퇴) - 아예 기록 안 남김!
-
-            System.out.println("🟠 [student3] 조퇴: 아침(O) + 점심(O) + 저녁(X) → LEAVE");
+            for (int i = 1; i <= 13; i++) {
+                String loginId = "student" + i;
+                Member student = memberRepository.findByLoginId(loginId).orElse(null);
+                if (student == null) continue;
+                
+                // 랜덤 출석 패턴 (70% 출석, 15% 지각, 10% 조퇴, 5% 결석)
+                int pattern = random.nextInt(100);
+                String ipSuffix = String.valueOf(100 + i);
+                
+                if (pattern < 70) {
+                    // 🔵 정상 출석: 아침(O) + 점심(O) + 저녁(O)
+                    createTodayAttendance(student, javaCourse, today, "192.168.1." + ipSuffix,
+                            true, true, true, false, false, false);
+                    System.out.println("🔵 [" + loginId + "] 정상 출석: 아침(O) + 점심(O) + 저녁(O)");
+                } else if (pattern < 85) {
+                    // 🟡 지각: 아침(늦음) + 점심(O) + 저녁(O)
+                    createTodayAttendance(student, javaCourse, today, "192.168.1." + ipSuffix,
+                            true, true, true, true, false, false);
+                    System.out.println("🟡 [" + loginId + "] 지각: 아침(늦음) + 점심(O) + 저녁(O)");
+                } else if (pattern < 95) {
+                    // 🟠 조퇴: 아침(O) + 점심(O) + 저녁(X)
+                    createTodayAttendance(student, javaCourse, today, "192.168.1." + ipSuffix,
+                            true, true, false, false, false, false);
+                    System.out.println("🟠 [" + loginId + "] 조퇴: 아침(O) + 점심(O) + 저녁(X)");
+                } else {
+                    // 🔴 결석: 모두 결석
+                    System.out.println("🔴 [" + loginId + "] 결석: 아침(X) + 점심(X) + 저녁(X)");
+                }
+            }
+            System.out.println("✅ [테스트용] 오늘 출석 데이터 생성 완료");
         }
         // 6. 공지사항(notice) 데이터 생성 (총 30개)
         if (noticeRepository.count() == 0) {
             System.out.println("🔄 [테스트용] 공지사항 데이터 생성 시작...");
-            Member admin = memberRepository.findByLoginId("admin")
-                    .orElseThrow(() -> new RuntimeException("관리자 계정이 없습니다."));
             LocalDateTime now = LocalDateTime.now();
 
             for (int i = 1; i <= 30; i++) {
@@ -342,6 +246,181 @@ public class DataInitializer implements CommandLineRunner {
 
     }
     /* [ 헬퍼 메서드 ] */
+    
+    // 랜덤 출석 상태 생성 메서드 (중복 체크 포함, 생성 여부 반환)
+    private boolean createPastDataRandomIfNotExists(Member student, Course course, LocalDate date) {
+        // 이미 존재하는 DailyAttendance가 있는지 확인
+        java.util.Optional<DailyAttendance> existingDaily = dailyAttendanceRepository
+                .findByMemberIdAndCourseIdAndDate(student.getId(), course.getId(), date);
+        
+        if (existingDaily.isPresent()) {
+            // 이미 존재하면 건너뛰기
+            return false;
+        }
+        
+        createPastDataRandomInternal(student, course, date);
+        return true;
+    }
+    
+    // 랜덤 출석 상태 생성 메서드 (내부 구현)
+    private void createPastDataRandomInternal(Member student, Course course, LocalDate date) {
+        java.util.Random random = new java.util.Random(student.getId().hashCode() + date.hashCode());
+        
+        // 랜덤 출석 상태 결정 (55% 출석, 15% 지각, 15% 조퇴, 15% 결석)
+        int randomValue = random.nextInt(100);
+        AttendanceStatus status;
+        AttendanceStatus morningStatus;
+        AttendanceStatus lunchStatus;
+        AttendanceStatus dinnerStatus;
+        
+        if (randomValue < 55) {
+            // 55% - 정상 출석
+            status = AttendanceStatus.PRESENT;
+            morningStatus = AttendanceStatus.PRESENT;
+            lunchStatus = AttendanceStatus.PRESENT;
+            dinnerStatus = AttendanceStatus.PRESENT;
+        } else if (randomValue < 70) {
+            // 15% - 지각 (아침만 늦음)
+            status = AttendanceStatus.LATE;
+            morningStatus = AttendanceStatus.LATE;
+            lunchStatus = AttendanceStatus.PRESENT;
+            dinnerStatus = AttendanceStatus.PRESENT;
+        } else if (randomValue < 85) {
+            // 15% - 조퇴 (저녁 결석)
+            status = AttendanceStatus.LEAVE;
+            morningStatus = AttendanceStatus.PRESENT;
+            lunchStatus = AttendanceStatus.PRESENT;
+            dinnerStatus = AttendanceStatus.ABSENT;
+        } else {
+            // 15% - 결석
+            status = AttendanceStatus.ABSENT;
+            morningStatus = AttendanceStatus.ABSENT;
+            lunchStatus = AttendanceStatus.ABSENT;
+            dinnerStatus = AttendanceStatus.ABSENT;
+        }
+
+        // 1. DailyAttendance 저장
+        DailyAttendance daily = DailyAttendance.builder()
+                .memberId(student.getId())
+                .courseId(course.getId())
+                .date(date)
+                .status(status)
+                .morningStatus(morningStatus)
+                .lunchStatus(lunchStatus)
+                .dinnerStatus(dinnerStatus)
+                .build();
+        
+        // 전체 상태 업데이트 (시간대별 상태 기반으로 재계산)
+        daily.recalculateOverallStatus();
+
+        DailyAttendance savedDaily = dailyAttendanceRepository.save(daily);
+
+        // 2. DetailedAttendance 저장 (결석이 아닌 경우에만)
+        if (status != AttendanceStatus.ABSENT) {
+            // 아침 출석
+            if (morningStatus != AttendanceStatus.ABSENT) {
+                LocalTime morningTime = (morningStatus == AttendanceStatus.LATE) 
+                    ? LocalTime.of(9, 30) : LocalTime.of(8, 50 + random.nextInt(10));
+                createDetail(student, course, savedDaily.getId(), AttendanceType.MORNING, date,
+                        morningTime, morningStatus == AttendanceStatus.PRESENT);
+            }
+            // 점심 출석
+            if (lunchStatus != AttendanceStatus.ABSENT) {
+                createDetail(student, course, savedDaily.getId(), AttendanceType.LUNCH, date,
+                        LocalTime.of(12, random.nextInt(30)), true);  // 12:00 ~ 12:29
+            }
+            // 저녁 출석
+            if (dinnerStatus != AttendanceStatus.ABSENT) {
+                createDetail(student, course, savedDaily.getId(), AttendanceType.DINNER, date,
+                        LocalTime.of(17, 50 + random.nextInt(10)), true);
+            }
+        }
+    }
+    
+    // 랜덤 출석 상태 생성 메서드 (모든 학생 대상) - 레거시
+    private void createPastDataRandom(Member student, Course course, LocalDate date) {
+        // 이미 존재하는 DailyAttendance가 있는지 확인
+        java.util.Optional<DailyAttendance> existingDaily = dailyAttendanceRepository
+                .findByMemberIdAndCourseIdAndDate(student.getId(), course.getId(), date);
+        
+        if (existingDaily.isPresent()) {
+            // 이미 존재하면 건너뛰기
+            return;
+        }
+        
+        java.util.Random random = new java.util.Random(student.getId().hashCode() + date.hashCode());
+        
+        // 랜덤 출석 상태 결정 (70% 출석, 15% 지각, 10% 조퇴, 5% 결석)
+        int randomValue = random.nextInt(100);
+        AttendanceStatus status;
+        AttendanceStatus morningStatus;
+        AttendanceStatus lunchStatus;
+        AttendanceStatus dinnerStatus;
+        
+        if (randomValue < 55) {
+            // 55% - 정상 출석
+            status = AttendanceStatus.PRESENT;
+            morningStatus = AttendanceStatus.PRESENT;
+            lunchStatus = AttendanceStatus.PRESENT;
+            dinnerStatus = AttendanceStatus.PRESENT;
+        } else if (randomValue < 70) {
+            // 15% - 지각 (아침만 늦음)
+            status = AttendanceStatus.LATE;
+            morningStatus = AttendanceStatus.LATE;
+            lunchStatus = AttendanceStatus.PRESENT;
+            dinnerStatus = AttendanceStatus.PRESENT;
+        } else if (randomValue < 85) {
+            // 15% - 조퇴 (저녁 결석)
+            status = AttendanceStatus.LEAVE;
+            morningStatus = AttendanceStatus.PRESENT;
+            lunchStatus = AttendanceStatus.PRESENT;
+            dinnerStatus = AttendanceStatus.ABSENT;
+        } else {
+            // 15% - 결석
+            status = AttendanceStatus.ABSENT;
+            morningStatus = AttendanceStatus.ABSENT;
+            lunchStatus = AttendanceStatus.ABSENT;
+            dinnerStatus = AttendanceStatus.ABSENT;
+        }
+
+        // 1. DailyAttendance 저장
+        DailyAttendance daily = DailyAttendance.builder()
+                .memberId(student.getId())
+                .courseId(course.getId())
+                .date(date)
+                .status(status)
+                .morningStatus(morningStatus)
+                .lunchStatus(lunchStatus)
+                .dinnerStatus(dinnerStatus)
+                .build();
+        
+        // 전체 상태 업데이트 (시간대별 상태 기반으로 재계산)
+        daily.recalculateOverallStatus();
+
+        DailyAttendance savedDaily = dailyAttendanceRepository.save(daily);
+
+        // 2. DetailedAttendance 저장 (결석이 아닌 경우에만)
+        if (status != AttendanceStatus.ABSENT) {
+            // 아침 출석
+            if (morningStatus != AttendanceStatus.ABSENT) {
+                LocalTime morningTime = (morningStatus == AttendanceStatus.LATE) 
+                    ? LocalTime.of(9, 30) : LocalTime.of(8, 50 + random.nextInt(10));
+                createDetail(student, course, savedDaily.getId(), AttendanceType.MORNING, date,
+                        morningTime, morningStatus == AttendanceStatus.PRESENT);
+            }
+            // 점심 출석
+            if (lunchStatus != AttendanceStatus.ABSENT) {
+                createDetail(student, course, savedDaily.getId(), AttendanceType.LUNCH, date,
+                        LocalTime.of(12, random.nextInt(30)), true);  // 12:00 ~ 12:29
+            }
+            // 저녁 출석
+            if (dinnerStatus != AttendanceStatus.ABSENT) {
+                createDetail(student, course, savedDaily.getId(), AttendanceType.DINNER, date,
+                        LocalTime.of(17, 50 + random.nextInt(10)), true);
+            }
+        }
+    }
+    
     private void createPastData(Member student, Course course, LocalDate date) {
         // 학생별/날짜별 랜덤 시나리오
         AttendanceStatus status;
@@ -378,9 +457,9 @@ public class DataInitializer implements CommandLineRunner {
             // 아침 (지각이면 09:30, 아니면 08:50)
             createDetail(student, course, savedDaily.getId(), AttendanceType.MORNING, date,
                     forceLate ? LocalTime.of(9, 30) : LocalTime.of(8, 50), !forceLate);
-            // 점심 (13:10)
+            // 점심 (12:00)
             createDetail(student, course, savedDaily.getId(), AttendanceType.LUNCH, date,
-                    LocalTime.of(13, 10), true);
+                    LocalTime.of(12, 0), true);
             // 저녁 (18:00)
             createDetail(student, course, savedDaily.getId(), AttendanceType.DINNER, date,
                     LocalTime.of(18, 0), true);
@@ -398,6 +477,59 @@ public class DataInitializer implements CommandLineRunner {
                 .isVerified(verified)
                 .failReason(verified ? null : "지각 또는 인증 실패")
                 .build());
+    }
+    
+    // 오늘 출석 데이터 생성 헬퍼 메서드
+    private void createTodayAttendance(Member student, Course course, LocalDate today, String ip,
+                                        boolean hasMorning, boolean hasLunch, boolean hasDinner,
+                                        boolean isLate, boolean isLunchLate, boolean isDinnerLate) {
+        // 아침 출석
+        if (hasMorning) {
+            LocalTime morningTime = isLate ? LocalTime.of(9, 30) : LocalTime.of(8, 55);
+            detailedAttendanceRepository.save(DetailedAttendance.builder()
+                    .memberId(student.getId())
+                    .courseId(course.getId())
+                    .dailyAttendanceId(null)
+                    .type(AttendanceType.MORNING)
+                    .inputNumber("1234")
+                    .checkTime(LocalDateTime.of(today, morningTime))
+                    .connectionIp(ip)
+                    .isVerified(!isLate)
+                    .failReason(isLate ? "출석 가능 시간이 아닙니다. (출석 가능: 08:50 ~ 09:10)" : null)
+                    .build());
+        }
+        
+        // 점심 출석
+        if (hasLunch) {
+            LocalTime lunchTime = isLunchLate ? LocalTime.of(12, 45) : LocalTime.of(12, 0);
+            detailedAttendanceRepository.save(DetailedAttendance.builder()
+                    .memberId(student.getId())
+                    .courseId(course.getId())
+                    .dailyAttendanceId(null)
+                    .type(AttendanceType.LUNCH)
+                    .inputNumber("5678")
+                    .checkTime(LocalDateTime.of(today, lunchTime))
+                    .connectionIp(ip)
+                    .isVerified(!isLunchLate)
+                    .failReason(isLunchLate ? "출석 가능 시간이 아닙니다. (출석 가능: 11:20 ~ 13:00)" : null)
+                    .build());
+        }
+        
+        // 저녁 출석
+        if (hasDinner) {
+            LocalTime dinnerTime = isDinnerLate ? LocalTime.of(18, 30) : LocalTime.of(17, 55);
+            detailedAttendanceRepository.save(DetailedAttendance.builder()
+                    .memberId(student.getId())
+                    .courseId(course.getId())
+                    .dailyAttendanceId(null)
+                    .type(AttendanceType.DINNER)
+                    .inputNumber("9999")
+                    .checkTime(LocalDateTime.of(today, dinnerTime))
+                    .connectionIp(ip)
+                    .isVerified(!isDinnerLate)
+                    .failReason(isDinnerLate ? "출석 가능 시간이 아닙니다. (출석 가능: 17:50 ~ 18:10)" : null)
+                    .build());
+        }
     }
 
     // 학생 생성 헬퍼 메서드
@@ -423,5 +555,58 @@ public class DataInitializer implements CommandLineRunner {
                 .status(EnrollmentStatus.ACTIVE)
                 .statusChangedAt(LocalDateTime.now())
                 .build();
+    }
+    
+    // 특정 날짜에 대한 출석 설정 생성 헬퍼 메서드
+    private void createAttendanceConfigForDate(Course course, Member admin, LocalDate targetDate) {
+        // 이미 해당 날짜의 설정이 있는지 각 타입별로 확인
+        boolean morningExists = attendanceConfigRepository.findByCourseIdAndTargetDateAndType(
+                course.getId(), targetDate, AttendanceType.MORNING).isPresent();
+        boolean lunchExists = attendanceConfigRepository.findByCourseIdAndTargetDateAndType(
+                course.getId(), targetDate, AttendanceType.LUNCH).isPresent();
+        boolean dinnerExists = attendanceConfigRepository.findByCourseIdAndTargetDateAndType(
+                course.getId(), targetDate, AttendanceType.DINNER).isPresent();
+        
+        // 아침 출석 설정 (08:50~09:10, 인증번호: 1234)
+        if (!morningExists) {
+            attendanceConfigRepository.save(AttendanceConfig.builder()
+                    .courseId(course.getId())
+                    .adminId(admin.getId())
+                    .targetDate(targetDate)
+                    .type(AttendanceType.MORNING)
+                    .authNumber("1234")
+                    .standardTime(LocalTime.of(8, 50))
+                    .deadline(LocalTime.of(9, 10))
+                    .validMinutes(20)
+                    .build());
+        }
+
+        // 점심 출석 설정 (11:20~12:30 출석, 12:30~13:00 지각, 인증번호: 5678)
+        if (!lunchExists) {
+            attendanceConfigRepository.save(AttendanceConfig.builder()
+                    .courseId(course.getId())
+                    .adminId(admin.getId())
+                    .targetDate(targetDate)
+                    .type(AttendanceType.LUNCH)
+                    .authNumber("5678")
+                    .standardTime(LocalTime.of(12, 30))  // 12:30 이전 출석, 이후 지각
+                    .deadline(LocalTime.of(13, 0))       // 13:00까지 출석 가능
+                    .validMinutes(70)                     // 11:20부터 시작 (12:30 - 70분)
+                    .build());
+        }
+
+        // 저녁 출석 설정 (17:50~18:10, 인증번호: 9012)
+        if (!dinnerExists) {
+            attendanceConfigRepository.save(AttendanceConfig.builder()
+                    .courseId(course.getId())
+                    .adminId(admin.getId())
+                    .targetDate(targetDate)
+                    .type(AttendanceType.DINNER)
+                    .authNumber("9012")
+                    .standardTime(LocalTime.of(17, 50))
+                    .deadline(LocalTime.of(18, 10))
+                    .validMinutes(20)
+                    .build());
+        }
     }
 }

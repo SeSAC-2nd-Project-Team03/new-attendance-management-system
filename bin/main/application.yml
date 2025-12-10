@@ -1,0 +1,69 @@
+server:
+  port: 9090
+
+spring:
+  # ----------------------------------------
+  # 🗄️ [DB] 데이터베이스 설정 (H2 File 모드)
+  # ----------------------------------------
+  datasource:
+    # H2 DB 파일을 프로젝트 내 ./data/attendance_db 경로에 저장
+    url: jdbc:h2:file:./data/attendance_db;MODE=MySQL;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: # 비밀번호 없음 (공란 유지)
+
+  # ----------------------------------------
+  # 🖥️ [H2 Console] 웹 브라우저 DB 접속 설정
+  # ----------------------------------------
+  h2:
+    console:
+      enabled: true      # H2 콘솔 사용 활성화
+      path: /h2-console  # 접속 주소: http://localhost:9090/h2-console
+      settings:
+        web-allow-others: true # 외부 접속 허용 (필요시)
+
+  # ----------------------------------------
+  # 🏗️ [JPA] ORM 설정
+  # ----------------------------------------
+  jpa:
+    defer-datasource-initialization: true
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update # 서버 시작 시 테이블 스키마 자동 업데이트
+    properties:
+      hibernate:
+        format_sql: true # SQL 로그 예쁘게 출력
+        show_sql: true   # 실행되는 SQL 로그 출력
+
+  # ----------------------------------------
+  # 📂 [File] 파일 업로드 제한 설정
+  # ----------------------------------------
+  servlet:
+    multipart:
+      max-file-size: 10MB      # 파일 하나당 최대 크기
+      max-request-size: 10MB   # 요청 전체 최대 크기
+
+  # ----------------------------------------
+  # 🔒 [Security] 보안 설정
+  # ----------------------------------------
+  security:
+    csrf:
+      enabled: false # 개발 단계에서는 CSRF 보안 비활성화
+
+# ==========================================
+# 🔐 [JWT] 토큰 설정 (Team A)
+# ==========================================
+jwt:
+  # HS512 알고리즘용 비밀키 (임시 키)
+  secret: "v3rY-s3cr3t-k3y-f0r-Att3ndanc3-M4nag3m3nt-Sy5t3m-k3y-must-b3-l0ng-3nough"
+  expiration: 3600000 # 1시간 (3600000ms)
+
+# ==========================================
+# 📂 [File] 파일 저장 경로 설정 (Team C)
+# ==========================================
+file:
+  upload:
+    # 로컬 저장 경로 (Windows: C:/..., Mac/Linux: /Users/...)
+    path: ./uploads/leave-files
+    # 파일 접근 URL (FileController와 매핑)
+    url: http://localhost:9090/api/v1/files

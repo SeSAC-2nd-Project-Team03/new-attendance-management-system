@@ -135,6 +135,28 @@ public class LeaveRequestController {
         // 3. 응답 반환
         return ResponseEntity.ok(ApiResponse.success(result));
     }
+    
+    /**
+     * [관리자] 모든 휴가 신청 조회
+     * GET /api/v1/leave-requests/admin
+     */
+    @GetMapping("/admin")
+    @Operation(summary = "모든 휴가 신청 조회", description = "관리자가 모든 휴가 신청 내역을 조회합니다.")
+    public ResponseEntity<ApiResponse<List<LeaveRequestResponseDto>>> getAllLeaveRequests() {
+        List<LeaveRequestResponseDto> requests = leaveRequestService.getAllLeaveRequests();
+        return ResponseEntity.ok(ApiResponse.success(requests));
+    }
+    
+    /**
+     * [관리자] 대기 중인 휴가 신청 조회
+     * GET /api/v1/leave-requests/admin/pending
+     */
+    @GetMapping("/admin/pending")
+    @Operation(summary = "대기 중인 휴가 신청 조회", description = "관리자가 승인 대기 중인 휴가 신청만 조회합니다.")
+    public ResponseEntity<ApiResponse<List<LeaveRequestResponseDto>>> getPendingLeaveRequests() {
+        List<LeaveRequestResponseDto> requests = leaveRequestService.getPendingLeaveRequests();
+        return ResponseEntity.ok(ApiResponse.success(requests));
+    }
 
     // ================= [내부 유틸 메서드] ================= //
 
