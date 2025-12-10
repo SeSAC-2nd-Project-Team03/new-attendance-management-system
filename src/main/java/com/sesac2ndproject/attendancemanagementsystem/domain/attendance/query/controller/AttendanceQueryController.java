@@ -81,20 +81,23 @@ public class AttendanceQueryController {
 
     //    - [ ]  **CSV/Excel 다운로드 API**: 현재 조회된 출석부 데이터를 파일로 변환하여 응답.
     @GetMapping("/admin/export")
-    @Operation(summary = "출석부 다운로드", description = "출석부를 다운 받을 수 있습니다.\n[필수 입력]\ntype(csv/excel)\n[선택 입력]\ndate & courseId (미입력시 전체 다운로드)")
+    @Operation(summary = "출석부 다운로드", description = "출석부를 다운 받을 수 있습니다.[필수 입력] type(csv/excel)[선택 입력]date & courseId (미입력시 전체 다운로드)")
     public ResponseEntity<ByteArrayResource> downloadAttendance(@RequestParam String downloadType,
                                                                 @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate workDate,
                                                                 @RequestParam(required = false) Long courseId) {
-        // 1. downloadType에 따른 파일 데이터 생성
+        // 1. downloadType을 소문자로 변환
+        downloadType = downloadType.toLowerCase();
+
+        // 2. downloadType에 따른 파일 데이터 생성
         byte[] fileData = attendanceQueryService.downloadAttendanceStats(downloadType, workDate, courseId);
 
-        // 2. 파일명 및 헤더 설정
+        // 3. 파일명 및 헤더 설정
         String fileName = "attendance_stats_" + LocalDate.now() + ("excel".equals(downloadType) ? ".xlsx" : ".csv");
         MediaType mediaType = "excel".equals(downloadType)
                 ? MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 : MediaType.parseMediaType("text/csv");
 
-        // 3. 파일 응답 반환
+        // 4. 파일 응답 반환
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                 .contentType(mediaType)

@@ -57,8 +57,20 @@ public class ExcelUtil {
                     row.createCell(9).setCellValue("-");
                 }
             }
+
+            // 컬럼 너비 자동 조절 로직
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+                // 여유있게 현재 너비에 20% 여유 너비를 추가
+                int currentWidth = sheet.getColumnWidth(i);
+                sheet.setColumnWidth(i, (int)(currentWidth * 1.2));
+            }
+
             workbook.write(baout);
             return baout.toByteArray();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Excel 파일 생성 실패, e");
         }
     }
 }

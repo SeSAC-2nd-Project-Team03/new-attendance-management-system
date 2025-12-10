@@ -33,7 +33,7 @@ public class NoticeController {
     //팝업 공지 조회	GET	/api/v1/notices/popups
 
     // 1. 공지사항 리스트 조회(Pageable 사용)
-    @Operation(summary = "공지사항 목록 조회", description = "모든 공지사항을 페이징하여 조회. (기본: 최신순 10개), sort의 []대괄호는 지우세요.")
+    @Operation(summary = "공지사항 목록 조회", description = "모든 공지사항을 페이징하여 조회. (기본: 최신순 10개), sort의 []대괄호는 지우세요. sort 안에 들어갈 수 있는 값 : id, title, writerName viewCounts, isPopup, createdAt, updatedAt")
     @GetMapping
     public ResponseEntity<Page<NoticeResponseDTO.ListDTO>> getAllNotices(@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(noticeService.getAllNotices(pageable));
