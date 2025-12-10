@@ -67,6 +67,23 @@ public class AttendanceConfig extends BaseTimeEntity {
         this.deadline = calculateDeadline(standardTime, validMinutes);
     }
 
+    /**
+     * 출석 시간 전체 업데이트 (시작 시간, 지각 기준 시간, 마감 시간)
+     */
+    public void updateTimeConfig(LocalTime startTime, LocalTime standardTime, LocalTime deadline) {
+        if (standardTime != null) {
+            this.standardTime = standardTime;
+        }
+        if (deadline != null) {
+            this.deadline = deadline;
+        }
+        // startTime과 standardTime으로 validMinutes 자동 계산
+        if (startTime != null && this.standardTime != null) {
+            int minutes = (int) java.time.Duration.between(startTime, this.standardTime).toMinutes();
+            this.validMinutes = Math.abs(minutes);
+        }
+    }
+
     public void updateAuthNumber(String authNumber) {
         this.authNumber = authNumber;
     }

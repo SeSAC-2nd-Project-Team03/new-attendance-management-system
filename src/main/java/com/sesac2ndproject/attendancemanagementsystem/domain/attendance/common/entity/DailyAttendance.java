@@ -3,7 +3,6 @@ package com.sesac2ndproject.attendancemanagementsystem.domain.attendance.common.
 import com.sesac2ndproject.attendancemanagementsystem.global.entity.BaseTimeEntity;
 import com.sesac2ndproject.attendancemanagementsystem.global.type.AttendanceStatus;
 import com.sesac2ndproject.attendancemanagementsystem.global.type.AttendanceType;
-import com.sesac2ndproject.attendancemanagementsystem.global.type.LeaveStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -97,6 +96,13 @@ public class DailyAttendance extends BaseTimeEntity {
      * - 하나라도 LATE (ABSENT 없음) → LATE
      */
     private void updateOverallStatus() {
+        recalculateOverallStatus();
+    }
+    
+    /**
+     * 전체 출석 상태 재계산 (외부에서 호출 가능)
+     */
+    public void recalculateOverallStatus() {
         if (morningStatus == null || lunchStatus == null || dinnerStatus == null) {
             // 아직 모든 시간대가 기록되지 않음
             return;
@@ -119,9 +125,12 @@ public class DailyAttendance extends BaseTimeEntity {
         }
     }
 
-    // 출석 상태를 PRESENT로 변경
+    // 출석 상태를 PRESENT로 변경 (모든 시간대도 PRESENT로 변경)
     public void changeStatusPresent() {
         this.status = AttendanceStatus.PRESENT;
+        this.morningStatus = AttendanceStatus.PRESENT;
+        this.lunchStatus = AttendanceStatus.PRESENT;
+        this.dinnerStatus = AttendanceStatus.PRESENT;
     }
 
     // DailyAttendance.java 안에 추가
@@ -130,5 +139,30 @@ public class DailyAttendance extends BaseTimeEntity {
         this.morningStatus = AttendanceStatus.OFFICIAL_LEAVE;
         this.lunchStatus = AttendanceStatus.OFFICIAL_LEAVE;
         this.dinnerStatus = AttendanceStatus.OFFICIAL_LEAVE;
+    }
+
+    /**
+     * 개별 시간대 상태 변경 (관리자용)
+     */
+    public void updateMorningStatus(AttendanceStatus status) {
+        this.morningStatus = status;
+        recalculateOverallStatus();
+    }
+
+    public void updateLunchStatus(AttendanceStatus status) {
+        this.lunchStatus = status;
+        recalculateOverallStatus();
+    }
+
+    public void updateDinnerStatus(AttendanceStatus status) {
+        this.dinnerStatus = status;
+        recalculateOverallStatus();
+    }
+
+    /**
+     * 전체 상태 직접 변경 (관리자용)
+     */
+    public void updateOverallStatusDirect(AttendanceStatus status) {
+        this.status = status;
     }
 }

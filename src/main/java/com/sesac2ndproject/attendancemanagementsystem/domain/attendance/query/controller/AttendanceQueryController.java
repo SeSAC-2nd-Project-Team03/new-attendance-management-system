@@ -103,5 +103,4 @@ public class AttendanceQueryController {
                 .contentType(mediaType)
                 .body(new ByteArrayResource(fileData));
     }
-
 }

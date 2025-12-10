@@ -68,25 +68,29 @@ public class AttendanceConfigService {
     }
 
     // 시간 설정 변경
+    @Transactional
     public AttendanceConfigResponse updateAttendanceConfig(Long id, AttendanceConfigUpdateRequest request) {
         AttendanceConfig config = attendanceConfigRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_CONFIG_NOT_FOUND));
 
-        // 엔티티의 비즈니스 메서드 호출
-        LocalTime newStandardTime = (request.getStandardTime() != null)
-                ? request.getStandardTime()
-                : config.getStandardTime();
+        // 새로운 방식: startTime, standardTime, deadline 직접 설정
+        if (request.getStartTime() != null || request.getDeadline() != null) {
+            config.updateTimeConfig(request.getStartTime(), request.getStandardTime(), request.getDeadline());
+        }
+        // 기존 방식: standardTime, validMinutes 설정
+        else if (request.getStandardTime() != null || request.getValidMinutes() != null) {
+            LocalTime newStandardTime = (request.getStandardTime() != null)
+                    ? request.getStandardTime()
+                    : config.getStandardTime();
 
-        Integer newValidMinutes = (request.getValidMinutes() != null)
-                ? request.getValidMinutes()
-                : config.getValidMinutes();
+            Integer newValidMinutes = (request.getValidMinutes() != null)
+                    ? request.getValidMinutes()
+                    : config.getValidMinutes();
 
-        if (request.getStandardTime() == null && request.getValidMinutes() == null) {
+            config.updateTime(newStandardTime, newValidMinutes);
+        } else {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
-
-        config.updateTime(request.getStandardTime(), request.getValidMinutes());
-
 
         return AttendanceConfigResponse.from(config);
     }

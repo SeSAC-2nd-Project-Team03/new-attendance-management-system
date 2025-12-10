@@ -31,6 +31,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // CORS 설정
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -45,11 +46,11 @@ public class SecurityConfig {
         return source;
     }
 
-
     // 보안 필터 체인
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // CORS 설정 활성화
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // CSRF 해제 (REST API 개발 시 필수)
@@ -68,15 +69,10 @@ public class SecurityConfig {
                                 "/h2-console/**"
                         ).permitAll()
 
-                        .requestMatchers(
-                                        "/api/v1/admin/**",                 // 1. 일반 관리자 (설정 등)
-                                        "/api/v1/leave-requests/admin/**",  // 2. 휴가 관리
-                                        "/api/v1/attendances/admin/**",     // 3. 출석 관리
-                                        "/api/v1/notices/admin/**",         // 4. 공지 관리
-                                        "/api/v1/members/admin/**"          // 5. 회원 관리
-                        ).hasRole("ADMIN")
+                        // 테스트 전용(추후 삭제)
+                        .requestMatchers("/**").permitAll()
 
-                        .requestMatchers("/api/v1/").authenticated()
+                        // 나머지는 무조건 인증 필요
                         .anyRequest().authenticated()
                 )
 

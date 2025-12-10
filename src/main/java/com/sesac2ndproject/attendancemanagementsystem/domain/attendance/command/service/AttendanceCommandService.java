@@ -1,5 +1,6 @@
 package com.sesac2ndproject.attendancemanagementsystem.domain.attendance.command.service;
 
+import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.common.dto.request.AttendanceStatusUpdateRequest;
 import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.common.dto.response.DailyAttendanceResponse;
 import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.configure.entity.AttendanceConfig;
 import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.configure.repository.AttendanceConfigRepository;
@@ -141,6 +142,97 @@ public class AttendanceCommandService {
                 .status(dailyAttendance.getStatus())
                 .build();
 
+    }
+
+    /**
+     * [관리자] memberId, courseId, date 기반으로 출석 상태를 출석(PRESENT)로 변경
+     * DailyAttendance가 없으면 새로 생성하여 PRESENT 상태로 저장
+     */
+    @Transactional
+    public DailyAttendanceResponse statusPresenceChangeByMember(Long memberId, Long courseId, LocalDate date) {
+        // 1. 해당 조건으로 DailyAttendance 조회 (없으면 새로 생성)
+        DailyAttendance dailyAttendance = dailyAttendanceRepository
+                .findByMemberIdAndCourseIdAndDate(memberId, courseId, date)
+                .orElseGet(() -> {
+                    log.info("📝 새 DailyAttendance 생성 - memberId: {}, courseId: {}, date: {}", memberId, courseId, date);
+                    return DailyAttendance.builder()
+                            .memberId(memberId)
+                            .courseId(courseId)
+                            .date(date)
+                            .build();
+                });
+        
+        // 2. 상태 변경 (AttendanceStatus -> PRESENT)
+        dailyAttendance.changeStatusPresent();
+        
+        // 3. 저장
+        DailyAttendance saved = dailyAttendanceRepository.save(dailyAttendance);
+        
+        // 4. 변경된 결과를 DTO로 변환하여 반환
+        return DailyAttendanceResponse.builder()
+                .id(saved.getId())
+                .memberId(saved.getMemberId())
+                .courseId(saved.getCourseId())
+                .date(saved.getDate())
+                .morningStatus(saved.getMorningStatus())
+                .lunchStatus(saved.getLunchStatus())
+                .dinnerStatus(saved.getDinnerStatus())
+                .status(saved.getStatus())
+                .build();
+    }
+
+    /**
+     * [관리자] 출석 상태 개별 변경 (아침/점심/저녁/전체 각각 변경 가능)
+     */
+    @Transactional
+    public DailyAttendanceResponse updateAttendanceStatus(AttendanceStatusUpdateRequest request) {
+        // 1. 해당 조건으로 DailyAttendance 조회 (없으면 새로 생성)
+        DailyAttendance dailyAttendance = dailyAttendanceRepository
+                .findByMemberIdAndCourseIdAndDate(request.getMemberId(), request.getCourseId(), request.getDate())
+                .orElseGet(() -> {
+                    log.info("📝 새 DailyAttendance 생성 - memberId: {}, courseId: {}, date: {}", 
+                            request.getMemberId(), request.getCourseId(), request.getDate());
+                    return DailyAttendance.builder()
+                            .memberId(request.getMemberId())
+                            .courseId(request.getCourseId())
+                            .date(request.getDate())
+                            .build();
+                });
+
+        // 2. 각 시간대별 상태 변경 (null이 아닌 경우에만)
+        if (request.getMorningStatus() != null) {
+            dailyAttendance.updateMorningStatus(request.getMorningStatus());
+            log.info("🌅 아침 상태 변경: {}", request.getMorningStatus());
+        }
+        if (request.getLunchStatus() != null) {
+            dailyAttendance.updateLunchStatus(request.getLunchStatus());
+            log.info("☀️ 점심 상태 변경: {}", request.getLunchStatus());
+        }
+        if (request.getDinnerStatus() != null) {
+            dailyAttendance.updateDinnerStatus(request.getDinnerStatus());
+            log.info("🌙 저녁 상태 변경: {}", request.getDinnerStatus());
+        }
+        
+        // 3. 전체 상태 직접 설정 (지정된 경우)
+        if (request.getOverallStatus() != null) {
+            dailyAttendance.updateOverallStatusDirect(request.getOverallStatus());
+            log.info("📊 전체 상태 직접 변경: {}", request.getOverallStatus());
+        }
+
+        // 4. 저장
+        DailyAttendance saved = dailyAttendanceRepository.save(dailyAttendance);
+
+        // 5. 응답 DTO 반환
+        return DailyAttendanceResponse.builder()
+                .id(saved.getId())
+                .memberId(saved.getMemberId())
+                .courseId(saved.getCourseId())
+                .date(saved.getDate())
+                .morningStatus(saved.getMorningStatus())
+                .lunchStatus(saved.getLunchStatus())
+                .dinnerStatus(saved.getDinnerStatus())
+                .status(saved.getStatus())
+                .build();
     }
 
     /**

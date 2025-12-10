@@ -28,10 +28,10 @@ public class AdminNoticeController {
     @Operation(summary = "공지사항 작성", description = "관리자가 새로운 공지사항을 등록.")
     @PostMapping
     public ResponseEntity<Long> createNotice(@RequestBody NoticeRequestDTO noticeRequestDTO,
-                                             @Parameter(hidden = true)  @AuthenticationPrincipal Member admin /*현재 로그인 한 관리자 정보 가져옴*/) {
-        // 테스트를 대비하여 기본값은 1L로 설정
-        Long adminId = (admin != null) ? admin.getId() : 1L;
-//        Long adminId = 1L;
+        @Parameter(hidden = true)  @AuthenticationPrincipal Member admin /*현재 로그인 한 관리자 정보 가져옴*/) {
+// 테스트를 대비하여 기본값은 1L로 설정
+Long adminId = (admin != null) ? admin.getId() : 1L;
+//        Long adminId = 1L;    Long adminId = 1L;
         Long createdId = noticeService.createNotice(noticeRequestDTO, adminId);
         return ResponseEntity.ok(createdId);
     }
