@@ -6,6 +6,8 @@ import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.configur
 import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.configure.entity.AttendanceConfig;
 import com.sesac2ndproject.attendancemanagementsystem.domain.attendance.configure.service.AttendanceConfigService;
 import com.sesac2ndproject.attendancemanagementsystem.domain.member.entity.Member;
+import com.sesac2ndproject.attendancemanagementsystem.global.error.CustomException;
+import com.sesac2ndproject.attendancemanagementsystem.global.error.ErrorCode;
 import com.sesac2ndproject.attendancemanagementsystem.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -35,9 +37,16 @@ public class AttendanceConfigController {
     @Operation(summary = "출석 설정 생성", description = "관리자가 반, 날짜, 시간별 출석 인증번호를 설정합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse<Long>> createAttendanceConfig(
-            @Valid @RequestBody AttendanceConfigCreateRequest request
+            @Valid @RequestBody AttendanceConfigCreateRequest request,
+            @AuthenticationPrincipal Member admin
     ) {
-        Long configId = attendanceConfigService.createAttendanceConfig(request);
+
+        if (admin == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Long adminId = admin.getId();
+        Long configId = attendanceConfigService.createAttendanceConfig(request, adminId);
         return ResponseEntity
                 .created(URI.create("/api/v1/admin/attendance-configs/" + configId))
                 .body(ApiResponse.success(configId));

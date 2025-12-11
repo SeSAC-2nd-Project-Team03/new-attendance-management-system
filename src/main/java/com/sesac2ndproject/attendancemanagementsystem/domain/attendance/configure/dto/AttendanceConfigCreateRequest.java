@@ -32,5 +32,6 @@ public class AttendanceConfigCreateRequest {
     private LocalTime standardTime;
 
     @NotNull(message = "유효 시간은 필수입니다.")
-    private Integer validMinutes;
+    @Builder.Default
+    private Integer validMinutes = 20;
 }

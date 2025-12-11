@@ -28,7 +28,7 @@ public class AttendanceConfigService {
 
     // 출석 설정 생성하기
     @Transactional
-    public Long createAttendanceConfig(AttendanceConfigCreateRequest request) {
+    public Long createAttendanceConfig(AttendanceConfigCreateRequest request, Long adminId) {
         // 1. 중복 설정 검증
         if (attendanceConfigRepository.findByCourseIdAndTargetDateAndType(
                 request.getCourseId(), request.getTargetDate(), request.getType()).isPresent()) {
@@ -37,6 +37,7 @@ public class AttendanceConfigService {
 
         // 2. 엔티티 생성
         AttendanceConfig config = AttendanceConfig.create(
+                adminId,
                 request.getCourseId(),
                 request.getType(),
                 request.getAuthNumber(),
@@ -68,7 +69,7 @@ public class AttendanceConfigService {
     }
 
     // 시간 설정 변경
-    @Transactional
+    /*@Transactional
     public AttendanceConfigResponse updateAttendanceConfig(Long id, AttendanceConfigUpdateRequest request) {
         AttendanceConfig config = attendanceConfigRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_CONFIG_NOT_FOUND));
@@ -93,7 +94,32 @@ public class AttendanceConfigService {
         }
 
         return AttendanceConfigResponse.from(config);
+    }*/
+
+    // 시간 설정 변경
+    public AttendanceConfigResponse updateAttendanceConfig(Long id, AttendanceConfigUpdateRequest request) {
+        AttendanceConfig config = attendanceConfigRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.ATTENDANCE_CONFIG_NOT_FOUND));
+
+        // 엔티티의 비즈니스 메서드 호출
+        LocalTime newStandardTime = (request.getStandardTime() != null)
+                ? request.getStandardTime()
+                : config.getStandardTime();
+
+        Integer newValidMinutes = (request.getValidMinutes() != null)
+                ? request.getValidMinutes()
+                : config.getValidMinutes();
+
+        if (request.getStandardTime() == null && request.getValidMinutes() == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        config.updateTime(newStandardTime, newValidMinutes);
+
+
+        return AttendanceConfigResponse.from(config);
     }
+
 
     // 인증번호 수정
     @Transactional
@@ -107,6 +133,7 @@ public class AttendanceConfigService {
     }
 
     // 설정 삭제
+    @Transactional
     public void deleteAttendanceConfig(Long id) {
         AttendanceConfig config = attendanceConfigRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 설정을 찾을 수 없습니다. id=" + id));

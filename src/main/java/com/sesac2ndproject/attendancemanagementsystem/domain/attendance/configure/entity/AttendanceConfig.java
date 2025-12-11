@@ -58,7 +58,7 @@ public class AttendanceConfig extends BaseTimeEntity {
     private LocalTime deadline; // 마감 시간 (예: 09:10, 13:30)
 
     @Column(nullable = false)
-    private Integer validMinutes; // 유효 시간 (분 단위, 예: 20분)
+    private Integer validMinutes ; // 유효 시간 (분 단위, 예: 20분)
 
 
     public void updateTime(LocalTime standardTime, Integer validMinutes) {
@@ -70,7 +70,7 @@ public class AttendanceConfig extends BaseTimeEntity {
     /**
      * 출석 시간 전체 업데이트 (시작 시간, 지각 기준 시간, 마감 시간)
      */
-    public void updateTimeConfig(LocalTime startTime, LocalTime standardTime, LocalTime deadline) {
+   /* public void updateTimeConfig(LocalTime startTime, LocalTime standardTime, LocalTime deadline) {
         if (standardTime != null) {
             this.standardTime = standardTime;
         }
@@ -82,17 +82,18 @@ public class AttendanceConfig extends BaseTimeEntity {
             int minutes = (int) java.time.Duration.between(startTime, this.standardTime).toMinutes();
             this.validMinutes = Math.abs(minutes);
         }
-    }
+    }*/
 
     public void updateAuthNumber(String authNumber) {
         this.authNumber = authNumber;
     }
 
-    public static AttendanceConfig create(Long courseId, AttendanceType type, String authNumber, LocalDate targetDate, LocalTime standardTime, Integer validMinutes) {
+    public static AttendanceConfig create(Long adminId, Long courseId, AttendanceType type, String authNumber, LocalDate targetDate, LocalTime standardTime, Integer validMinutes) {
         // 기본값 처리
         int actualValidMinutes = (validMinutes != null) ? validMinutes : 20;
 
         return AttendanceConfig.builder()
+                .adminId(adminId)
                 .courseId(courseId)
                 .type(type)
                 .authNumber(authNumber)
